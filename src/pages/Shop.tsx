@@ -29,7 +29,7 @@ const Shop = () => {
   useEffect(() => {
     fetchCategories();
     fetchProducts();
-  }, [selectedCategory, sortBy, priceRange]);
+  }, [selectedCategory, sortBy, priceRange, searchParams]);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*");
@@ -38,6 +38,7 @@ const Shop = () => {
 
   const fetchProducts = async () => {
     setLoading(true);
+    const searchQuery = searchParams.get("search");
     let query = supabase.from("products").select("*");
 
     if (selectedCategory !== "all") {
@@ -45,6 +46,10 @@ const Shop = () => {
     }
 
     query = query.gte("price", priceRange[0]).lte("price", priceRange[1]);
+
+    if (searchQuery) {
+      query = query.or(`name.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    }
 
     if (sortBy === "price-asc") {
       query = query.order("price", { ascending: true });

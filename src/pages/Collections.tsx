@@ -78,33 +78,31 @@ const Collections = () => {
                   className="group relative overflow-hidden border-0 bg-card hover:shadow-luxury transition-all duration-500 animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="relative h-[400px] overflow-hidden">
+                  <div className="relative h-[300px] overflow-hidden">
                     <img
                       src={collection.image}
                       alt={collection.name}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-6 space-y-3">
-                      <p className="text-sm text-secondary uppercase tracking-widest font-semibold">
-                        {collection.productCount} Products
-                      </p>
-                      <h3 className="text-3xl font-serif font-bold text-foreground">
-                        {collection.name}
-                      </h3>
-                      <p className="text-muted-foreground line-clamp-2">
-                        {collection.description}
-                      </p>
-                      <Link to="/shop">
-                        <Button
-                          variant="default"
-                          className="mt-4 bg-secondary hover:bg-secondary/90 text-primary font-semibold"
-                        >
-                          Explore Collection
-                        </Button>
-                      </Link>
-                    </div>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <p className="text-sm text-secondary uppercase tracking-widest font-semibold">
+                      {collection.productCount} Products
+                    </p>
+                    <h3 className="text-3xl font-serif font-bold text-foreground">
+                      {collection.name}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {collection.description}
+                    </p>
+                    <Link to="/shop">
+                      <Button
+                        variant="default"
+                        className="mt-4 bg-secondary hover:bg-secondary/90 text-primary font-semibold"
+                      >
+                        Explore Collection
+                      </Button>
+                    </Link>
                   </div>
                 </Card>
               ))}

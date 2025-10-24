@@ -164,6 +164,14 @@ const About = () => {
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Visit our boutique or explore our collections online to discover your signature scent
             </p>
+            <div className="mt-8 space-y-2">
+              <p className="text-lg font-semibold">Visit Our Store</p>
+              <p className="text-muted-foreground">
+                New Pioneer Mall, Shop PB87<br />
+                Near Mapeera Building / Centenary Bank<br />
+                Kampala, Uganda
+              </p>
+            </div>
           </div>
         </section>
       </main>

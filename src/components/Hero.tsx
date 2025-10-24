@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-perfumes.jpg";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -31,13 +32,17 @@ const Hero = () => {
             crafted with the finest ingredients for the discerning connoisseur.
           </p>
           <div className="flex gap-4 pt-4">
-            <Button size="lg" className="group bg-primary hover:bg-primary/90 text-primary-foreground shadow-elegant">
-              Explore Collection
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-            <Button size="lg" variant="outline" className="border-2">
-              Shop Now
-            </Button>
+            <Link to="/collections">
+              <Button size="lg" className="group bg-primary hover:bg-primary/90 text-primary-foreground shadow-elegant">
+                Explore Collection
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+            <Link to="/shop">
+              <Button size="lg" variant="outline" className="border-2">
+                Shop Now
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
