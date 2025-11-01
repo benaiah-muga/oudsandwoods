@@ -8,11 +8,16 @@ import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import Collections from "./pages/Collections";
 import About from "./pages/About";
+import Contact from "./pages/Contact";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminProducts from "./pages/admin/Products";
+import AdminOrders from "./pages/admin/Orders";
 import NotFound from "./pages/NotFound";
+import WhatsAppWidget from "./components/WhatsAppWidget";
 
 const queryClient = new QueryClient();
 
@@ -28,13 +33,18 @@ const App = () => (
             <Route path="/shop" element={<Shop />} />
             <Route path="/collections" element={<Collections />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <WhatsAppWidget />
         </BrowserRouter>
       </CartProvider>
     </TooltipProvider>

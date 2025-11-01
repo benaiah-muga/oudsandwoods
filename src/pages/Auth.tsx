@@ -81,17 +81,23 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/10 to-background px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-luxury opacity-30" />
       <Link
         to="/"
-        className="absolute top-8 left-8 inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-8 left-8 inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all hover:gap-3 z-20"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back
+        <span className="font-medium">Back</span>
       </Link>
-      <Card className="w-full max-w-md p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-serif font-bold mb-2">Ouds & Woods</h1>
+      <Card className="w-full max-w-md p-8 shadow-2xl border-border/50 backdrop-blur-sm bg-card/95 relative z-10">
+        <div className="text-center mb-8 space-y-2">
+          <div className="inline-block p-3 rounded-full bg-secondary/10 mb-2">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center">
+              <span className="text-2xl font-serif font-bold text-primary">O&W</span>
+            </div>
+          </div>
+          <h1 className="text-3xl font-serif font-bold">Ouds & Woods</h1>
           <p className="text-muted-foreground">Welcome to luxury fragrances</p>
         </div>
 

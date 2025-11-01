@@ -55,14 +55,12 @@ const Collections = () => {
       <Header />
       <main>
         {/* Hero Section */}
-        <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-luxury opacity-90" />
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=1600&q=80')] bg-cover bg-center" />
-          <div className="relative z-10 text-center space-y-4 px-4">
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-primary-foreground animate-fade-in">
+        <section className="py-20 bg-gradient-to-b from-background via-muted/20 to-background">
+          <div className="container mx-auto px-4 text-center space-y-4">
+            <h1 className="text-5xl md:text-7xl font-serif font-bold text-foreground animate-fade-in">
               Our Collections
             </h1>
-            <p className="text-xl text-primary-foreground/90 max-w-2xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Discover curated collections crafted for every mood and moment
             </p>
           </div>

@@ -1,15 +1,35 @@
-import { ShoppingCart, User, Search } from "lucide-react";
+import { ShoppingCart, User, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  const checkAdminStatus = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+
+    setIsAdmin(!!roles);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +64,9 @@ const Header = () => {
           <Link to="/about" className="text-sm font-medium transition-colors hover:text-secondary">
             About
           </Link>
+          <Link to="/contact" className="text-sm font-medium transition-colors hover:text-secondary">
+            Contact
+          </Link>
         </nav>
 
         {/* Actions */}
@@ -75,6 +98,13 @@ const Header = () => {
             >
               <Search className="h-5 w-5" />
             </Button>
+          )}
+          {isAdmin && (
+            <Link to="/admin">
+              <Button variant="ghost" size="icon">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
           )}
           <Link to="/profile">
             <Button variant="ghost" size="icon">
