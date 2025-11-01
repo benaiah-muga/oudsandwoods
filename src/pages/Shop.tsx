@@ -78,10 +78,10 @@ const Shop = () => {
               Discover
             </p>
             <h1 className="text-5xl md:text-6xl font-serif font-bold">
-              Our Collection
+              Luxury Fragrances
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Explore our carefully curated selection of luxury fragrances
+              Explore our carefully curated selection of premium perfumes
             </p>
           </div>
 
@@ -187,7 +187,7 @@ const Shop = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 animate-fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 animate-fade-in">
                   {products.map((product) => (
                     <ProductCard
                       key={product.id}

@@ -143,7 +143,7 @@ const ProductDetails = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Truck className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">Free shipping on orders over $150</span>
+                <span className="text-sm">Free shipping on orders over UGX 550,000</span>
               </div>
             </div>
 
@@ -153,10 +153,10 @@ const ProductDetails = () => {
             </div>
 
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold">${product.price.toFixed(2)}</span>
+              <span className="text-4xl font-bold">UGX {product.price.toLocaleString()}</span>
               {product.original_price && (
                 <span className="text-xl text-muted-foreground line-through">
-                  ${product.original_price.toFixed(2)}
+                  UGX {product.original_price.toLocaleString()}
                 </span>
               )}
             </div>

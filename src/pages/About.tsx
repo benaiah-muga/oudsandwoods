@@ -57,7 +57,7 @@ const About = () => {
               </h2>
               <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
                 <p>
-                  Ouds & Woods began with a simple vision: to create fragrances that transcend time and trends, 
+                  Ouds & Woods began with a simple vision to create fragrances that transcend time and trends, 
                   capturing the essence of luxury in every bottle. Our founders, passionate about the ancient art 
                   of perfumery, set out to craft scents that tell stories and evoke emotions.
                 </p>
@@ -68,8 +68,8 @@ const About = () => {
                 </p>
                 <p>
                   Today, Ouds & Woods is celebrated worldwide for its commitment to quality, authenticity, and 
-                  artistry. We believe that a fragrance is more than just a scent—it's an experience, a memory, 
-                  and an expression of one's unique identity.
+                  artistry. We believe that a fragrance is more than just a scent. It is an experience, a memory, 
+                  and an expression of your unique identity.
                 </p>
               </div>
             </div>

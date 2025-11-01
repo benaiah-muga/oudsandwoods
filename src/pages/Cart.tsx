@@ -103,7 +103,7 @@ const Cart = () => {
                         </Button>
                       </div>
                       <p className="text-xl font-bold">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        UGX {(item.product.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -119,17 +119,17 @@ const Cart = () => {
               <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>UGX {totalPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
-                  <span>{totalPrice > 150 ? "Free" : "$10.00"}</span>
+                  <span>{totalPrice > 550000 ? "Free" : "UGX 35,000"}</span>
                 </div>
               </div>
               <div className="flex justify-between text-xl font-bold border-t pt-4">
                 <span>Total</span>
                 <span>
-                  ${(totalPrice + (totalPrice > 150 ? 0 : 10)).toFixed(2)}
+                  UGX {(totalPrice + (totalPrice > 550000 ? 0 : 35000)).toLocaleString()}
                 </span>
               </div>
               <Button

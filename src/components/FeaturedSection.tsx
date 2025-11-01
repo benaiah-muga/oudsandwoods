@@ -1,41 +1,43 @@
 import ProductCard from "./ProductCard";
-import featuredImage from "@/assets/featured-perfume.jpg";
+import oudRoyalImage from "@/assets/perfume-oud-royal.jpg";
+import roseGoldImage from "@/assets/perfume-rose-gold.jpg";
+import amberNightsImage from "@/assets/perfume-amber-nights.jpg";
+import velvetWoodImage from "@/assets/perfume-velvet-wood.jpg";
 
 const FeaturedSection = () => {
-  // Mock featured products - will be replaced with real data
   const featuredProducts = [
     {
       id: "1",
       name: "Oud Royal",
       brand: "Ouds & Woods",
-      price: 189.99,
-      originalPrice: 249.99,
-      imageUrl: featuredImage,
+      price: 699000,
+      originalPrice: 899000,
+      imageUrl: oudRoyalImage,
       rating: 4.8,
     },
     {
       id: "2",
       name: "Rose Gold Essence",
       brand: "Ouds & Woods",
-      price: 159.99,
-      imageUrl: featuredImage,
+      price: 599000,
+      imageUrl: roseGoldImage,
       rating: 4.6,
     },
     {
       id: "3",
       name: "Amber Nights",
       brand: "Ouds & Woods",
-      price: 179.99,
-      originalPrice: 219.99,
-      imageUrl: featuredImage,
+      price: 649000,
+      originalPrice: 799000,
+      imageUrl: amberNightsImage,
       rating: 4.7,
     },
     {
       id: "4",
       name: "Velvet Wood",
       brand: "Ouds & Woods",
-      price: 169.99,
-      imageUrl: featuredImage,
+      price: 629000,
+      imageUrl: velvetWoodImage,
       rating: 4.9,
     },
   ];
@@ -58,7 +60,7 @@ const FeaturedSection = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 animate-fade-in">
           {featuredProducts.map((product) => (
             <ProductCard key={product.id} {...product} />
           ))}
