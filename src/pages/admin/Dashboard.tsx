@@ -30,15 +30,21 @@ const AdminDashboard = () => {
       return;
     }
 
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
+    // Check if super admin or has any admin permission
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', {
+      _user_id: user.id
+    });
 
-    if (!roles) {
-      navigate("/");
+    if (!isSuperAdmin) {
+      // Check if has any permission
+      const { data: permissions } = await supabase
+        .from('admin_permissions')
+        .select('permission')
+        .eq('user_id', user.id);
+
+      if (!permissions || permissions.length === 0) {
+        navigate("/");
+      }
     }
   };
 
@@ -134,7 +140,7 @@ const AdminDashboard = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Link to="/admin/products">
               <Card className="p-8 hover:shadow-lg transition-shadow cursor-pointer">
                 <Package className="h-12 w-12 text-secondary mb-4" />
@@ -157,6 +163,19 @@ const AdminDashboard = () => {
                 </p>
                 <Button className="bg-secondary hover:bg-secondary/90 text-primary">
                   View Orders
+                </Button>
+              </Card>
+            </Link>
+
+            <Link to="/admin/manage-admins">
+              <Card className="p-8 hover:shadow-lg transition-shadow cursor-pointer">
+                <Users className="h-12 w-12 text-secondary mb-4" />
+                <h2 className="text-2xl font-serif font-bold mb-2">Manage Admins</h2>
+                <p className="text-muted-foreground mb-4">
+                  Add admins and assign permissions
+                </p>
+                <Button className="bg-secondary hover:bg-secondary/90 text-primary">
+                  Manage Access
                 </Button>
               </Card>
             </Link>

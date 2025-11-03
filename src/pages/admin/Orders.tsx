@@ -26,15 +26,20 @@ const AdminOrders = () => {
       return;
     }
 
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
+    // Check if super admin or has manage_orders permission
+    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', {
+      _user_id: user.id
+    });
 
-    if (!roles) {
-      navigate("/");
+    if (!isSuperAdmin) {
+      const { data: hasPermission } = await supabase.rpc('has_permission', {
+        _user_id: user.id,
+        _permission: 'manage_orders'
+      });
+
+      if (!hasPermission) {
+        navigate("/");
+      }
     }
   };
 
