@@ -34,10 +34,10 @@ const AdminProducts = () => {
 
   const checkAdminAccess = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+      if (!user) {
+        navigate("/admin/auth");
+        return;
+      }
 
     // Check if super admin or has manage_products permission
     const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', {

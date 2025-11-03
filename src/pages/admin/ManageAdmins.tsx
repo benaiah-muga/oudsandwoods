@@ -43,7 +43,7 @@ const ManageAdmins = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        navigate("/auth");
+        navigate("/admin/auth");
         return;
       }
 
