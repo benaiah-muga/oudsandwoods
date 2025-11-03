@@ -15,9 +15,10 @@ const WhatsAppWidget = () => {
     >
       <Button
         size="lg"
-        className="rounded-full w-16 h-16 shadow-2xl hover:shadow-[0_0_30px_rgba(37,211,102,0.5)] bg-[#25D366] hover:bg-[#20BD5A] transition-all duration-300 hover:scale-110"
+        className="rounded-full px-6 py-3 shadow-2xl bg-secondary hover:bg-secondary/90 text-primary transition-all duration-300 hover:scale-105 flex items-center gap-2"
       >
-        <MessageCircle className="h-7 w-7 text-white" />
+        <MessageCircle className="h-5 w-5" />
+        <span className="font-medium">WhatsApp</span>
       </Button>
     </a>
   );
