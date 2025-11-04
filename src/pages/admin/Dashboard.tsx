@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Package, ShoppingCart, Users, TrendingUp } from "lucide-react";
@@ -74,17 +73,15 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <AdminLayout>
         <p className="text-muted-foreground">Loading...</p>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="py-20">
-        <div className="container mx-auto px-4">
+    <AdminLayout>
+      <div className="space-y-6">
           <div className="mb-8">
             <h1 className="text-4xl font-serif font-bold mb-2">Admin Dashboard</h1>
             <p className="text-muted-foreground">Manage your store</p>
@@ -180,10 +177,8 @@ const AdminDashboard = () => {
               </Card>
             </Link>
           </div>
-        </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

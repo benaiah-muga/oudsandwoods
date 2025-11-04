@@ -132,12 +132,14 @@ const Cart = () => {
                   UGX {(totalPrice + (totalPrice > 550000 ? 0 : 35000)).toLocaleString()}
                 </span>
               </div>
-              <Button
-                size="lg"
-                className="w-full bg-secondary hover:bg-secondary/90 text-primary font-semibold"
-              >
-                Proceed to Checkout
-              </Button>
+              <Link to="/checkout">
+                <Button
+                  size="lg"
+                  className="w-full bg-secondary hover:bg-secondary/90 text-primary font-semibold"
+                >
+                  Proceed to Checkout
+                </Button>
+              </Link>
               <Link to="/shop">
                 <Button variant="outline" size="lg" className="w-full">
                   Continue Shopping

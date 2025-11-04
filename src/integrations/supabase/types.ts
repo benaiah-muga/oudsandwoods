@@ -197,6 +197,41 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          order_id: string
+          verified: boolean | null
+          verified_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          order_id: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          order_id?: string
+          verified?: boolean | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_codes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -244,12 +279,17 @@ export type Database = {
       }
       orders: {
         Row: {
+          assigned_delivery_guy: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string | null
+          delivery_address: string | null
+          delivery_phone: string | null
           discount_amount: number | null
           id: string
           notes: string | null
+          payment_confirmation_time: string | null
+          payment_confirmed: boolean | null
           shipping_address: string | null
           shipping_city: string | null
           shipping_postal_code: string | null
@@ -259,12 +299,17 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          assigned_delivery_guy?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          delivery_address?: string | null
+          delivery_phone?: string | null
           discount_amount?: number | null
           id?: string
           notes?: string | null
+          payment_confirmation_time?: string | null
+          payment_confirmed?: boolean | null
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_postal_code?: string | null
@@ -274,12 +319,17 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          assigned_delivery_guy?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          delivery_address?: string | null
+          delivery_phone?: string | null
           discount_amount?: number | null
           id?: string
           notes?: string | null
+          payment_confirmation_time?: string | null
+          payment_confirmed?: boolean | null
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_postal_code?: string | null
@@ -477,6 +527,27 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_logs: {
+        Row: {
+          id: string
+          page_path: string | null
+          user_id: string | null
+          visited_at: string | null
+        }
+        Insert: {
+          id?: string
+          page_path?: string | null
+          user_id?: string | null
+          visited_at?: string | null
+        }
+        Update: {
+          id?: string
+          page_path?: string | null
+          user_id?: string | null
+          visited_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -504,7 +575,7 @@ export type Database = {
         | "manage_orders"
         | "manage_admins"
         | "view_analytics"
-      app_role: "admin" | "customer"
+      app_role: "admin" | "customer" | "delivery_guy"
       order_status:
         | "pending"
         | "processing"
@@ -644,7 +715,7 @@ export const Constants = {
         "manage_admins",
         "view_analytics",
       ],
-      app_role: ["admin", "customer"],
+      app_role: ["admin", "customer", "delivery_guy"],
       order_status: [
         "pending",
         "processing",
