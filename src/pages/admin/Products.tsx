@@ -22,13 +22,19 @@ const AdminProducts = () => {
     description: "",
     brand: "",
     price: "",
-    stock_quantity: "",
+    availability: true,
     size: "",
+    category_id: "",
+    image_url: "",
   });
+  const [categories, setCategories] = useState<any[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -59,7 +65,7 @@ const AdminProducts = () => {
     try {
       const { data, error } = await supabase
         .from("products")
-        .select("*")
+        .select("*, categories(name)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -75,13 +81,73 @@ const AdminProducts = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error: any) {
+      toast({
+        title: "Error uploading image",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      let imageUrl = formData.image_url;
+
+      if (imageFile) {
+        const uploadedUrl = await uploadImage(imageFile);
+        if (uploadedUrl) imageUrl = uploadedUrl;
+      }
+
       const productData = {
-        ...formData,
+        name: formData.name,
+        description: formData.description,
+        brand: formData.brand,
         price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock_quantity),
+        availability: formData.availability,
+        size: formData.size,
+        category_id: formData.category_id || null,
+        image_url: imageUrl,
       };
 
       if (editingProduct) {
@@ -100,7 +166,17 @@ const AdminProducts = () => {
 
       setShowForm(false);
       setEditingProduct(null);
-      setFormData({ name: "", description: "", brand: "", price: "", stock_quantity: "", size: "" });
+      setImageFile(null);
+      setFormData({ 
+        name: "", 
+        description: "", 
+        brand: "", 
+        price: "", 
+        availability: true, 
+        size: "", 
+        category_id: "", 
+        image_url: "" 
+      });
       fetchProducts();
     } catch (error: any) {
       toast({
@@ -135,9 +211,12 @@ const AdminProducts = () => {
       description: product.description || "",
       brand: product.brand || "",
       price: product.price.toString(),
-      stock_quantity: product.stock_quantity.toString(),
+      availability: product.availability ?? true,
       size: product.size || "",
+      category_id: product.category_id || "",
+      image_url: product.image_url || "",
     });
+    setImageFile(null);
     setShowForm(true);
   };
 
@@ -161,7 +240,17 @@ const AdminProducts = () => {
               onClick={() => {
                 setShowForm(!showForm);
                 setEditingProduct(null);
-                setFormData({ name: "", description: "", brand: "", price: "", stock_quantity: "", size: "" });
+                setImageFile(null);
+                setFormData({ 
+                  name: "", 
+                  description: "", 
+                  brand: "", 
+                  price: "", 
+                  availability: true, 
+                  size: "", 
+                  category_id: "", 
+                  image_url: "" 
+                });
               }}
               className="bg-secondary hover:bg-secondary/90 text-primary"
             >
@@ -202,13 +291,17 @@ const AdminProducts = () => {
                     />
                   </div>
                   <div>
-                    <Label>Stock Quantity</Label>
-                    <Input
-                      type="number"
-                      value={formData.stock_quantity}
-                      onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                      required
-                    />
+                    <Label>Category</Label>
+                    <select
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    >
+                      <option value="">No Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <Label>Size</Label>
@@ -216,6 +309,17 @@ const AdminProducts = () => {
                       value={formData.size}
                       onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                     />
+                  </div>
+                  <div>
+                    <Label>Availability</Label>
+                    <select
+                      value={formData.availability ? "true" : "false"}
+                      onChange={(e) => setFormData({ ...formData, availability: e.target.value === "true" })}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    >
+                      <option value="true">Available</option>
+                      <option value="false">Out of Stock</option>
+                    </select>
                   </div>
                 </div>
                 <div>
@@ -226,9 +330,31 @@ const AdminProducts = () => {
                     rows={4}
                   />
                 </div>
+                <div>
+                  <Label>Image Upload</Label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                    disabled={uploading}
+                  />
+                </div>
+                <div>
+                  <Label>Or Image URL</Label>
+                  <Input
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    placeholder="https://example.com/image.jpg"
+                    disabled={uploading}
+                  />
+                </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="bg-secondary hover:bg-secondary/90 text-primary">
-                    {editingProduct ? "Update" : "Add"} Product
+                  <Button 
+                    type="submit" 
+                    className="bg-secondary hover:bg-secondary/90 text-primary"
+                    disabled={uploading}
+                  >
+                    {uploading ? "Uploading..." : editingProduct ? "Update" : "Add"} Product
                   </Button>
                   <Button
                     type="button"
@@ -236,6 +362,7 @@ const AdminProducts = () => {
                     onClick={() => {
                       setShowForm(false);
                       setEditingProduct(null);
+                      setImageFile(null);
                     }}
                   >
                     Cancel
@@ -252,7 +379,7 @@ const AdminProducts = () => {
                   <div className="flex-1">
                     <h3 className="text-xl font-serif font-bold mb-2">{product.name}</h3>
                     <p className="text-muted-foreground mb-2">{product.description}</p>
-                    <div className="flex gap-4 text-sm">
+                    <div className="flex gap-4 text-sm flex-wrap">
                       <p>
                         <span className="font-semibold">Brand:</span> {product.brand || "N/A"}
                       </p>
@@ -260,10 +387,16 @@ const AdminProducts = () => {
                         <span className="font-semibold">Price:</span> UGX {product.price.toLocaleString()}
                       </p>
                       <p>
-                        <span className="font-semibold">Stock:</span> {product.stock_quantity}
+                        <span className="font-semibold">Availability:</span>{" "}
+                        <span className={product.availability ? "text-green-600" : "text-red-600"}>
+                          {product.availability ? "Available" : "Out of Stock"}
+                        </span>
                       </p>
                       <p>
                         <span className="font-semibold">Size:</span> {product.size || "N/A"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Category:</span> {product.categories?.name || "N/A"}
                       </p>
                     </div>
                   </div>

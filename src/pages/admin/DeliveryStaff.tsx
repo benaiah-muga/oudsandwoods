@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,10 @@ const DeliveryStaff = () => {
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState<any[]>([]);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [creatingStaff, setCreatingStaff] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -80,36 +83,40 @@ const DeliveryStaff = () => {
 
   const handleAddStaff = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreatingStaff(true);
     
     try {
-      // Find user by email
-      const { data: profiles, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email)
-        .single();
+      // Create new user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
+      });
 
-      if (profileError || !profiles) {
-        toast({
-          title: "Error",
-          description: "User not found. They must sign up first.",
-          variant: "destructive",
-        });
-        return;
+      if (signUpError) throw signUpError;
+      
+      if (!authData.user) {
+        throw new Error("Failed to create user account");
       }
 
       // Add delivery_guy role
       const { error: roleError } = await supabase
         .from("user_roles")
         .insert({
-          user_id: profiles.id,
+          user_id: authData.user.id,
           role: "delivery_guy",
         });
 
       if (roleError) throw roleError;
 
-      toast({ title: "Delivery staff added successfully" });
+      toast({ title: "Delivery staff account created successfully" });
       setEmail("");
+      setPassword("");
+      setFullName("");
       setDialogOpen(false);
       fetchStaff();
     } catch (error: any) {
@@ -118,6 +125,8 @@ const DeliveryStaff = () => {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setCreatingStaff(false);
     }
   };
 
@@ -168,9 +177,23 @@ const DeliveryStaff = () => {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Delivery Staff</DialogTitle>
+                <DialogTitle>
+                  <UserPlus className="inline h-5 w-5 mr-2" />
+                  Create Delivery Staff Account
+                </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddStaff} className="space-y-4">
+                <div>
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
                 <div>
                   <Label htmlFor="email">Email Address</Label>
                   <Input
@@ -181,11 +204,26 @@ const DeliveryStaff = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    User must have an account first
-                  </p>
                 </div>
-                <Button type="submit" className="w-full">Add Staff</Button>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Minimum 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={creatingStaff}
+                >
+                  {creatingStaff ? "Creating..." : "Create Staff Account"}
+                </Button>
               </form>
             </DialogContent>
           </Dialog>

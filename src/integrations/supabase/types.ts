@@ -342,6 +342,7 @@ export type Database = {
       }
       products: {
         Row: {
+          availability: boolean | null
           brand: string | null
           category_id: string | null
           created_at: string | null
@@ -355,10 +356,10 @@ export type Database = {
           price: number
           scent: string | null
           size: string | null
-          stock_quantity: number | null
           updated_at: string | null
         }
         Insert: {
+          availability?: boolean | null
           brand?: string | null
           category_id?: string | null
           created_at?: string | null
@@ -372,10 +373,10 @@ export type Database = {
           price: number
           scent?: string | null
           size?: string | null
-          stock_quantity?: number | null
           updated_at?: string | null
         }
         Update: {
+          availability?: boolean | null
           brand?: string | null
           category_id?: string | null
           created_at?: string | null
@@ -389,7 +390,6 @@ export type Database = {
           price?: number
           scent?: string | null
           size?: string | null
-          stock_quantity?: number | null
           updated_at?: string | null
         }
         Relationships: [

@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingCart, Users, Truck, BarChart3 } from "lucide-react";
+import { Home, Package, ShoppingCart, Users, Truck, BarChart3, FolderTree, Megaphone } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -9,14 +9,15 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 
 const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Products", url: "/admin/products", icon: Package },
+  { title: "Categories", url: "/admin/categories", icon: FolderTree },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+  { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
   { title: "Delivery Staff", url: "/admin/delivery-staff", icon: Truck },
   { title: "Manage Admins", url: "/admin/manage-admins", icon: Users },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
@@ -26,15 +27,13 @@ export function AdminSidebar() {
   const { open } = useSidebar();
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-secondary/20 text-secondary font-medium" : "hover:bg-muted/50";
+    isActive ? "bg-white/10 text-white font-medium" : "hover:bg-white/5 text-white/80";
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarTrigger className="m-2 self-end" />
-      
-      <SidebarContent>
+    <Sidebar collapsible="icon" className="bg-[hsl(220,70%,20%)] border-r-0">
+      <SidebarContent className="bg-[hsl(220,70%,20%)]">
         <SidebarGroup>
-          <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-white/60">Admin Panel</SidebarGroupLabel>
           
           <SidebarGroupContent>
             <SidebarMenu>

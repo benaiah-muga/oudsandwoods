@@ -19,6 +19,8 @@ import AdminOrders from "./pages/admin/Orders";
 import ManageAdmins from "./pages/admin/ManageAdmins";
 import DeliveryStaff from "./pages/admin/DeliveryStaff";
 import Analytics from "./pages/admin/Analytics";
+import AdminCategories from "./pages/admin/Categories";
+import AdminCampaigns from "./pages/admin/Campaigns";
 import Checkout from "./pages/Checkout";
 import DeliveryDashboard from "./pages/delivery/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -47,7 +49,9 @@ const App = () => (
             <Route path="/admin/auth" element={<Auth />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/campaigns" element={<AdminCampaigns />} />
             <Route path="/admin/manage-admins" element={<ManageAdmins />} />
             <Route path="/admin/delivery-staff" element={<DeliveryStaff />} />
             <Route path="/admin/analytics" element={<Analytics />} />

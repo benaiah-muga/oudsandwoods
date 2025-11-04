@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2 } from "lucide-react";
+import { Trash2, UserPlus } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -24,8 +23,11 @@ const ManageAdmins = () => {
   const [loading, setLoading] = useState(true);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
+  const [newAdminFullName, setNewAdminFullName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [creatingAdmin, setCreatingAdmin] = useState(false);
 
   const permissions = [
     { id: "manage_products", label: "Manage Products" },
@@ -127,34 +129,36 @@ const ManageAdmins = () => {
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    setCreatingAdmin(true);
+    
     try {
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', newAdminEmail)
-        .single();
+      // Create new user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: newAdminEmail,
+        password: newAdminPassword,
+        options: {
+          data: {
+            full_name: newAdminFullName,
+          },
+        },
+      });
 
-      if (profileError) {
-        toast({
-          title: "User not found",
-          description: "No user exists with this email. They must create an account first.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
+      if (signUpError) throw signUpError;
+      
+      if (!authData.user) {
+        throw new Error("Failed to create user account");
       }
 
-      // Grant permissions
+      const userId = authData.user.id;
+
+      // Grant selected permissions
       const { data: { user } } = await supabase.auth.getUser();
       
       for (const permission of selectedPermissions) {
         const { error: permError } = await supabase
           .from('admin_permissions')
           .insert({
-            user_id: profile.id,
+            user_id: userId,
             permission: permission as any,
             granted_by: user?.id
           });
@@ -165,21 +169,23 @@ const ManageAdmins = () => {
       }
 
       toast({
-        title: "Admin added successfully",
-        description: `Permissions granted to ${newAdminEmail}`,
+        title: "Admin created successfully",
+        description: `Account created and permissions granted to ${newAdminEmail}`,
       });
 
       setNewAdminEmail("");
+      setNewAdminPassword("");
+      setNewAdminFullName("");
       setSelectedPermissions([]);
       await fetchAdmins();
     } catch (error: any) {
       toast({
-        title: "Error adding admin",
+        title: "Error creating admin",
         description: error.message,
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setCreatingAdmin(false);
     }
   };
 
@@ -217,27 +223,51 @@ const ManageAdmins = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-serif font-bold mb-8">Manage Admins</h1>
+    <AdminLayout>
+      <div className="space-y-6">
+        <h1 className="text-4xl font-serif font-bold">Manage Admins</h1>
 
-        <Card className="p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Add New Admin</h2>
+        <Card className="p-6">
+          <h2 className="text-2xl font-serif font-bold mb-4">
+            <UserPlus className="inline h-6 w-6 mr-2" />
+            Create New Admin Account
+          </h2>
           <form onSubmit={handleAddAdmin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="admin-email">User Email</Label>
+              <Label htmlFor="full-name">Full Name</Label>
+              <Input
+                id="full-name"
+                type="text"
+                value={newAdminFullName}
+                onChange={(e) => setNewAdminFullName(e.target.value)}
+                placeholder="John Doe"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="admin-email">Email Address</Label>
               <Input
                 id="admin-email"
                 type="email"
                 value={newAdminEmail}
                 onChange={(e) => setNewAdminEmail(e.target.value)}
-                placeholder="user@example.com"
+                placeholder="admin@example.com"
                 required
               />
-              <p className="text-sm text-muted-foreground">
-                User must already have an account
-              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Password</Label>
+              <Input
+                id="admin-password"
+                type="password"
+                value={newAdminPassword}
+                onChange={(e) => setNewAdminPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                required
+                minLength={6}
+              />
             </div>
 
             <div className="space-y-2">
@@ -266,16 +296,16 @@ const ManageAdmins = () => {
 
             <Button 
               type="submit" 
-              disabled={loading || selectedPermissions.length === 0}
+              disabled={creatingAdmin || selectedPermissions.length === 0}
               className="bg-secondary hover:bg-secondary/90 text-primary"
             >
-              Add Admin
+              {creatingAdmin ? "Creating..." : "Create Admin Account"}
             </Button>
           </form>
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-2xl font-semibold mb-4">Current Admins</h2>
+          <h2 className="text-2xl font-serif font-bold mb-4">Current Admins</h2>
           <div className="space-y-4">
             {admins.map((admin) => (
               <Card key={admin.id} className="p-4">
@@ -312,9 +342,8 @@ const ManageAdmins = () => {
             )}
           </div>
         </Card>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 
