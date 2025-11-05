@@ -21,6 +21,7 @@ import DeliveryStaff from "./pages/admin/DeliveryStaff";
 import Analytics from "./pages/admin/Analytics";
 import AdminCategories from "./pages/admin/Categories";
 import AdminCampaigns from "./pages/admin/Campaigns";
+import AdminReviews from "./pages/admin/Reviews";
 import Checkout from "./pages/Checkout";
 import DeliveryDashboard from "./pages/delivery/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
             <Route path="/admin/campaigns" element={<AdminCampaigns />} />
             <Route path="/admin/manage-admins" element={<ManageAdmins />} />
             <Route path="/admin/delivery-staff" element={<DeliveryStaff />} />

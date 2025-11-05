@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingCart, Users, Truck, BarChart3, FolderTree, Megaphone } from "lucide-react";
+import { Home, Package, ShoppingCart, Users, Truck, BarChart3, FolderTree, Megaphone, Star } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const adminMenuItems = [
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: FolderTree },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
+  { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
   { title: "Delivery Staff", url: "/admin/delivery-staff", icon: Truck },
   { title: "Manage Admins", url: "/admin/manage-admins", icon: Users },
@@ -27,7 +28,7 @@ export function AdminSidebar() {
   const { open } = useSidebar();
 
   const getNavClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-white/10 text-white font-medium" : "hover:bg-white/5 text-white/80";
+    isActive ? "bg-secondary/20 text-white font-medium" : "text-white/80";
 
   return (
     <Sidebar collapsible="icon" className="bg-[hsl(220,70%,8%)] border-r-0">

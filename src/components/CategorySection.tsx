@@ -1,33 +1,53 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Flower2, Flame, Wind } from "lucide-react";
+import { Sparkles, Flower2, Flame, Wind, Package } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const CategorySection = () => {
-  const categories = [
-    {
-      name: "Oud Collection",
-      description: "Rich & Woody",
-      icon: Flame,
-      color: "text-amber-600",
-    },
-    {
-      name: "Floral Elegance",
-      description: "Soft & Romantic",
-      icon: Flower2,
-      color: "text-rose-400",
-    },
-    {
-      name: "Fresh & Citrus",
-      description: "Light & Energizing",
-      icon: Wind,
-      color: "text-emerald-500",
-    },
-    {
-      name: "Oriental Luxury",
-      description: "Bold & Mysterious",
-      icon: Sparkles,
-      color: "text-purple-500",
-    },
-  ];
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const iconMap: any = {
+    Flame,
+    Flower2,
+    Wind,
+    Sparkles,
+    Package,
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-muted-foreground">Loading...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-background">
@@ -43,22 +63,22 @@ const CategorySection = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {categories.map((category) => {
-            const Icon = category.icon;
+            const Icon = Package;
             return (
               <Card
-                key={category.name}
+                key={category.id}
                 className="group cursor-pointer border-0 shadow-elegant hover:shadow-gold transition-all duration-500 hover:-translate-y-2 overflow-hidden"
               >
                 <CardContent className="p-8 text-center space-y-4">
                   <div className="mx-auto w-16 h-16 rounded-full bg-gradient-luxury flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                    <Icon className={`h-8 w-8 ${category.color}`} />
+                    <Icon className="h-8 w-8 text-amber-600" />
                   </div>
                   <div>
                     <h3 className="font-serif text-xl font-bold mb-1">
                       {category.name}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {category.description}
+                      {category.description || "Explore our collection"}
                     </p>
                   </div>
                 </CardContent>

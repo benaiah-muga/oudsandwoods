@@ -1,30 +1,46 @@
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 
 const TestimonialsSection = () => {
-  const testimonials = [
-    {
-      name: "Sarah Mitchell",
-      role: "Fashion Designer",
-      content: "The Oud Royal fragrance is absolutely divine. It's become my signature scent, and I receive compliments everywhere I go.",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
-    },
-    {
-      name: "James Anderson",
-      role: "Business Executive",
-      content: "Exceptional quality and unique fragrances. The Velvet Wood is perfect for professional settings yet luxurious enough for evenings.",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&q=80",
-    },
-    {
-      name: "Aisha Nakato",
-      role: "Lifestyle Blogger",
-      content: "I've tried many luxury perfumes, but Ouds & Woods stands out. The Rose Gold Essence is sophisticated and long lasting.",
-      rating: 5,
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80",
-    },
-  ];
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
+
+  const fetchTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      setTestimonials(data || []);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-muted-foreground">Loading...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-muted/30">
@@ -44,13 +60,13 @@ const TestimonialsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in">
           {testimonials.map((testimonial, index) => (
             <Card
-              key={index}
+              key={testimonial.id}
               className="border-0 shadow-elegant hover:shadow-gold transition-all duration-500"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardContent className="p-8 space-y-4">
                 <div className="flex gap-1 mb-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
+                  {Array.from({ length: testimonial.rating }).map((_, i) => (
                     <Star
                       key={i}
                       className="h-4 w-4 fill-secondary text-secondary"
@@ -58,19 +74,14 @@ const TestimonialsSection = () => {
                   ))}
                 </div>
                 <p className="text-muted-foreground leading-relaxed italic">
-                  "{testimonial.content}"
+                  "{testimonial.comment}"
                 </p>
                 <div className="flex items-center gap-4 pt-4 border-t">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <div className="w-12 h-12 rounded-full bg-gradient-luxury flex items-center justify-center text-white font-semibold">
+                    {testimonial.reviewer_name?.charAt(0).toUpperCase() || "U"}
+                  </div>
                   <div>
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {testimonial.role}
-                    </p>
+                    <p className="font-semibold">{testimonial.reviewer_name || "Anonymous"}</p>
                   </div>
                 </div>
               </CardContent>

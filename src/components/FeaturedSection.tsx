@@ -1,46 +1,46 @@
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
-import oudRoyalImage from "@/assets/perfume-oud-royal.jpg";
-import roseGoldImage from "@/assets/perfume-rose-gold.jpg";
-import amberNightsImage from "@/assets/perfume-amber-nights.jpg";
-import velvetWoodImage from "@/assets/perfume-velvet-wood.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
 const FeaturedSection = () => {
-  const featuredProducts = [
-    {
-      id: "1",
-      name: "Oud Royal",
-      brand: "Ouds & Woods",
-      price: 699000,
-      originalPrice: 899000,
-      imageUrl: oudRoyalImage,
-      rating: 4.8,
-    },
-    {
-      id: "2",
-      name: "Rose Gold Essence",
-      brand: "Ouds & Woods",
-      price: 599000,
-      imageUrl: roseGoldImage,
-      rating: 4.6,
-    },
-    {
-      id: "3",
-      name: "Amber Nights",
-      brand: "Ouds & Woods",
-      price: 649000,
-      originalPrice: 799000,
-      imageUrl: amberNightsImage,
-      rating: 4.7,
-    },
-    {
-      id: "4",
-      name: "Velvet Wood",
-      brand: "Ouds & Woods",
-      price: 629000,
-      imageUrl: velvetWoodImage,
-      rating: 4.9,
-    },
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, []);
+
+  const fetchFeaturedProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_featured", true)
+        .eq("availability", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setFeaturedProducts(data || []);
+    } catch (error) {
+      console.error("Error fetching featured products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-gradient-to-b from-background to-muted/30">
+        <div className="container mx-auto px-4">
+          <p className="text-center text-muted-foreground">Loading...</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredProducts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-20 bg-gradient-to-b from-background to-muted/30">
@@ -62,7 +62,16 @@ const FeaturedSection = () => {
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8 animate-fade-in">
           {featuredProducts.map((product) => (
-            <ProductCard key={product.id} {...product} />
+            <ProductCard 
+              key={product.id} 
+              id={product.id}
+              name={product.name}
+              brand={product.brand || "Ouds & Woods"}
+              price={product.price}
+              originalPrice={product.original_price}
+              imageUrl={product.image_url}
+              rating={4.8}
+            />
           ))}
         </div>
       </div>

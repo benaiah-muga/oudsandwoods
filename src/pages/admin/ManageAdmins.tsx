@@ -93,6 +93,12 @@ const ManageAdmins = () => {
 
       const userIds = [...new Set(permissionsData?.map(p => p.user_id) || [])];
       
+      // Add super admin to the list
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && isSuperAdmin && !userIds.includes(user.id)) {
+        userIds.push(user.id);
+      }
+      
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, full_name')
@@ -116,6 +122,14 @@ const ManageAdmins = () => {
           admin.permissions.push(perm.permission);
         }
       });
+
+      // Add super admin tag if current user is super admin
+      if (user && isSuperAdmin && adminsMap.has(user.id)) {
+        const admin = adminsMap.get(user.id);
+        if (admin && !admin.permissions.includes('super_admin' as any)) {
+          admin.permissions.push('super_admin' as any);
+        }
+      }
 
       setAdmins(Array.from(adminsMap.values()));
     } catch (error: any) {
