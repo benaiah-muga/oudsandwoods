@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Star } from "lucide-react";
 
 const AdminProducts = () => {
   const navigate = useNavigate();
@@ -220,6 +220,27 @@ const AdminProducts = () => {
     setShowForm(true);
   };
 
+  const handleToggleFeatured = async (productId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({ is_featured: !currentStatus })
+        .eq("id", productId);
+
+      if (error) throw error;
+      toast({ 
+        title: `Product ${!currentStatus ? "featured" : "unfeatured"} successfully` 
+      });
+      fetchProducts();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -377,7 +398,12 @@ const AdminProducts = () => {
               <Card key={product.id} className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-xl font-serif font-bold mb-2">{product.name}</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-serif font-bold">{product.name}</h3>
+                      {product.is_featured && (
+                        <Star className="h-5 w-5 fill-yellow-500 text-yellow-500" />
+                      )}
+                    </div>
                     <p className="text-muted-foreground mb-2">{product.description}</p>
                     <div className="flex gap-4 text-sm flex-wrap">
                       <p>
@@ -401,6 +427,14 @@ const AdminProducts = () => {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleFeatured(product.id, product.is_featured)}
+                      title={product.is_featured ? "Remove from featured" : "Add to featured"}
+                    >
+                      <Star className={`h-4 w-4 ${product.is_featured ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

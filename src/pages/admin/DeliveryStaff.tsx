@@ -57,19 +57,30 @@ const DeliveryStaff = () => {
 
   const fetchStaff = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch user_roles for delivery guys
+      const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .select(`
-          *,
-          profiles:user_id (
-            email,
-            full_name
-          )
-        `)
+        .select("*")
         .eq("role", "delivery_guy");
 
-      if (error) throw error;
-      setStaff(data || []);
+      if (rolesError) throw rolesError;
+
+      // Fetch profiles for those users
+      const userIds = roles?.map(r => r.user_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const staffData = roles?.map(role => ({
+        ...role,
+        profiles: profiles?.find(p => p.id === role.user_id)
+      })) || [];
+
+      setStaff(staffData);
     } catch (error: any) {
       toast({
         title: "Error",

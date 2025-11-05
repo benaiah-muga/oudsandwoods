@@ -30,8 +30,8 @@ export function AdminSidebar() {
     isActive ? "bg-white/10 text-white font-medium" : "hover:bg-white/5 text-white/80";
 
   return (
-    <Sidebar collapsible="icon" className="bg-[hsl(220,70%,20%)] border-r-0">
-      <SidebarContent className="bg-[hsl(220,70%,20%)]">
+    <Sidebar collapsible="icon" className="bg-[hsl(220,70%,8%)] border-r-0">
+      <SidebarContent className="bg-[hsl(220,70%,8%)]">
         <SidebarGroup>
           <SidebarGroupLabel className="text-white/60">Admin Panel</SidebarGroupLabel>
           
