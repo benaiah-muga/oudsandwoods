@@ -1,0 +1,139 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
+interface UserRow {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  roles: string[];
+}
+
+const roleOrder = ["admin", "delivery_guy", "customer"] as const;
+
+type RoleFilter = typeof roleOrder[number] | "all";
+
+export default function AdminUsers() {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<RoleFilter>("all");
+
+  useEffect(() => {
+    checkAccess();
+  }, []);
+
+  const checkAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/admin/auth");
+        return;
+      }
+
+      const [{ data: isSuper }, { data: isAdmin }] = await Promise.all([
+        supabase.rpc('is_super_admin', { _user_id: user.id }),
+        supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+      ]);
+
+      if (!isSuper && !isAdmin) {
+        navigate("/");
+        return;
+      }
+
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Access denied", description: error.message, variant: "destructive" });
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+        supabase.from('profiles').select('id, email, full_name, created_at'),
+        supabase.from('user_roles').select('user_id, role'),
+      ]);
+
+      if (pErr) throw pErr;
+      if (rErr) throw rErr;
+
+      const map = new Map<string, UserRow>();
+      (profiles || []).forEach((p) => map.set(p.id, { id: p.id, email: p.email, full_name: p.full_name, roles: [] }));
+      (roles || []).forEach((r) => {
+        const row = map.get(r.user_id);
+        if (row) row.roles.push(r.role);
+      });
+
+      setUsers(Array.from(map.values()));
+    } catch (error: any) {
+      toast({ title: "Error fetching users", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const filtered = users
+    .filter((u) => {
+      const q = search.toLowerCase();
+      const matches = (u.email || "").toLowerCase().includes(q) || (u.full_name || "").toLowerCase().includes(q);
+      const byRole = filter === "all" ? true : u.roles.includes(filter);
+      return matches && byRole;
+    })
+    .sort((a, b) => roleOrderScore(a) - roleOrderScore(b));
+
+  function roleOrderScore(u: UserRow) {
+    const idx = roleOrder.findIndex((r) => u.roles.includes(r));
+    return idx === -1 ? 99 : idx;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <h1 className="text-4xl font-serif font-bold">User Management</h1>
+
+        <Card className="p-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div className="flex gap-2">
+            <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded ${filter==='all' ? 'bg-muted' : ''}`}>All</button>
+            <button onClick={() => setFilter('admin')} className={`px-3 py-1 rounded ${filter==='admin' ? 'bg-muted' : ''}`}>Admins</button>
+            <button onClick={() => setFilter('delivery_guy')} className={`px-3 py-1 rounded ${filter==='delivery_guy' ? 'bg-muted' : ''}`}>Delivery</button>
+            <button onClick={() => setFilter('customer')} className={`px-3 py-1 rounded ${filter==='customer' ? 'bg-muted' : ''}`}>Customers</button>
+          </div>
+          <Input placeholder="Search name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" />
+        </Card>
+
+        <div className="grid gap-4">
+          {filtered.map((u) => (
+            <Card key={u.id} className="p-4 flex items-center justify-between">
+              <div>
+                <div className="font-semibold">{u.full_name || u.email}</div>
+                <div className="text-sm text-muted-foreground">{u.email}</div>
+              </div>
+              <div className="flex gap-2">
+                {u.roles.map((r) => (
+                  <Badge key={r} variant="secondary" className="uppercase">{r.replace('_', ' ')}</Badge>
+                ))}
+              </div>
+            </Card>
+          ))}
+          {filtered.length === 0 && (
+            <p className="text-center text-muted-foreground py-8">No users match your filters.</p>
+          )}
+        </div>
+      </div>
+    </AdminLayout>
+  );
+}

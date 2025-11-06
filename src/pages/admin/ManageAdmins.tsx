@@ -23,7 +23,7 @@ const ManageAdmins = () => {
   const [loading, setLoading] = useState(true);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [newAdminPassword, setNewAdminPassword] = useState("");
+  // removed password field - users must sign up first
   const [newAdminFullName, setNewAdminFullName] = useState("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -141,67 +141,61 @@ const ManageAdmins = () => {
     }
   };
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreatingAdmin(true);
-    
-    try {
-      // Create new user account
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: newAdminEmail,
-        password: newAdminPassword,
-        options: {
-          data: {
-            full_name: newAdminFullName,
-          },
-        },
-      });
+const handleAddAdmin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setCreatingAdmin(true);
 
-      if (signUpError) throw signUpError;
-      
-      if (!authData.user) {
-        throw new Error("Failed to create user account");
-      }
+  try {
+    // Find existing user by email in profiles (user must have signed up already)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, email, full_name')
+      .eq('email', newAdminEmail)
+      .maybeSingle();
 
-      const userId = authData.user.id;
-
-      // Grant selected permissions
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      for (const permission of selectedPermissions) {
-        const { error: permError } = await supabase
-          .from('admin_permissions')
-          .insert({
-            user_id: userId,
-            permission: permission as any,
-            granted_by: user?.id
-          });
-
-        if (permError && !permError.message.includes('duplicate')) {
-          throw permError;
-        }
-      }
-
-      toast({
-        title: "Admin created successfully",
-        description: `Account created and permissions granted to ${newAdminEmail}`,
-      });
-
-      setNewAdminEmail("");
-      setNewAdminPassword("");
-      setNewAdminFullName("");
-      setSelectedPermissions([]);
-      await fetchAdmins();
-    } catch (error: any) {
-      toast({
-        title: "Error creating admin",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setCreatingAdmin(false);
+    if (profileError) throw profileError;
+    if (!profile) {
+      throw new Error('User not found. Ask them to create an account first, then try again.');
     }
-  };
+
+    const userId = profile.id;
+
+    // Current admin (granted_by)
+    const { data: { user } } = await supabase.auth.getUser();
+
+    for (const permission of selectedPermissions) {
+      const { error: permError } = await supabase
+        .from('admin_permissions')
+        .insert({
+          user_id: userId,
+          permission: permission as any,
+          granted_by: user?.id,
+        });
+
+      if (permError && !permError.message.includes('duplicate')) {
+        throw permError;
+      }
+    }
+
+    toast({
+      title: 'Permissions granted',
+      description: `Granted ${selectedPermissions.length} permission(s) to ${newAdminEmail}`,
+    });
+
+    setNewAdminEmail("");
+    setNewAdminFullName("");
+    setSelectedPermissions([]);
+    await fetchAdmins();
+  } catch (error: any) {
+    toast({
+      title: 'Error granting permissions',
+      description: error.message,
+      variant: 'destructive',
+    });
+  } finally {
+    setCreatingAdmin(false);
+  }
+};
 
   const handleRemovePermission = async (userId: string, permission: string) => {
     try {
@@ -244,7 +238,7 @@ const ManageAdmins = () => {
         <Card className="p-6">
           <h2 className="text-2xl font-serif font-bold mb-4">
             <UserPlus className="inline h-6 w-6 mr-2" />
-            Create New Admin Account
+            Grant Admin Permissions to Existing User
           </h2>
           <form onSubmit={handleAddAdmin} className="space-y-4">
             <div className="space-y-2">
@@ -254,7 +248,7 @@ const ManageAdmins = () => {
                 type="text"
                 value={newAdminFullName}
                 onChange={(e) => setNewAdminFullName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="John Doe (optional)"
                 required
               />
             </div>
@@ -271,18 +265,7 @@ const ManageAdmins = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="admin-password">Password</Label>
-              <Input
-                id="admin-password"
-                type="password"
-                value={newAdminPassword}
-                onChange={(e) => setNewAdminPassword(e.target.value)}
-                placeholder="Minimum 6 characters"
-                required
-                minLength={6}
-              />
-            </div>
+{/* Password removed - users must sign up first */}
 
             <div className="space-y-2">
               <Label>Permissions</Label>
