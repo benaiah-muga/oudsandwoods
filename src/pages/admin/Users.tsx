@@ -59,19 +59,44 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
+      const [{ data: profiles, error: pErr }, { data: roles, error: rErr }, { data: permissions, error: permErr }] = await Promise.all([
         supabase.from('profiles').select('id, email, full_name, created_at'),
         supabase.from('user_roles').select('user_id, role'),
+        supabase.from('admin_permissions').select('user_id, permission'),
       ]);
 
       if (pErr) throw pErr;
       if (rErr) throw rErr;
+      if (permErr) throw permErr;
 
       const map = new Map<string, UserRow>();
       (profiles || []).forEach((p) => map.set(p.id, { id: p.id, email: p.email, full_name: p.full_name, roles: [] }));
       (roles || []).forEach((r) => {
         const row = map.get(r.user_id);
         if (row) row.roles.push(r.role);
+      });
+
+      // Check for super admin and add role
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+        if (isSuperAdmin) {
+          // Add super admin to users if not already there
+          for (const [userId, profile] of map.entries()) {
+            const { data: isThisSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: userId });
+            if (isThisSuperAdmin && !profile.roles.includes('admin')) {
+              profile.roles.unshift('admin');
+            }
+          }
+        }
+      }
+
+      // Add users with admin permissions but no roles
+      (permissions || []).forEach((p) => {
+        const row = map.get(p.user_id);
+        if (row && !row.roles.includes('admin')) {
+          row.roles.push('admin');
+        }
       });
 
       setUsers(Array.from(map.values()));

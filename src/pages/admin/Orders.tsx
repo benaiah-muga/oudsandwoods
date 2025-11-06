@@ -12,6 +12,7 @@ const AdminOrders = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
     checkAdminAccess();
@@ -112,6 +113,19 @@ const AdminOrders = () => {
     );
   }
 
+  const filteredOrders = statusFilter === "all" 
+    ? orders 
+    : orders.filter(order => order.status === statusFilter);
+
+  const statusCounts = {
+    all: orders.length,
+    pending: orders.filter(o => o.status === "pending").length,
+    processing: orders.filter(o => o.status === "processing").length,
+    shipped: orders.filter(o => o.status === "shipped").length,
+    delivered: orders.filter(o => o.status === "delivered").length,
+    cancelled: orders.filter(o => o.status === "cancelled").length,
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -120,8 +134,24 @@ const AdminOrders = () => {
             <p className="text-muted-foreground">{orders.length} total orders</p>
           </div>
 
+          <Card className="p-4">
+            <div className="flex gap-2 flex-wrap">
+              {Object.entries(statusCounts).map(([status, count]) => (
+                <Button
+                  key={status}
+                  variant={statusFilter === status ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter(status)}
+                  className="capitalize"
+                >
+                  {status} ({count})
+                </Button>
+              ))}
+            </div>
+          </Card>
+
           <div className="space-y-4">
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <Card key={order.id} className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>

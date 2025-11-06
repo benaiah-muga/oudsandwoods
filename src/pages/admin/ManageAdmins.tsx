@@ -146,19 +146,21 @@ const handleAddAdmin = async (e: React.FormEvent) => {
   setCreatingAdmin(true);
 
   try {
-    // Find existing user by email in profiles (user must have signed up already)
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, email, full_name')
-      .eq('email', newAdminEmail)
-      .maybeSingle();
+    // Create new user account via Supabase admin API
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: newAdminEmail,
+      password: Math.random().toString(36).slice(-12) + "A1!", // Random secure password
+      options: {
+        data: {
+          full_name: newAdminFullName,
+        },
+      },
+    });
 
-    if (profileError) throw profileError;
-    if (!profile) {
-      throw new Error('User not found. Ask them to create an account first, then try again.');
-    }
+    if (authError) throw authError;
+    if (!authData.user) throw new Error("Failed to create user account");
 
-    const userId = profile.id;
+    const userId = authData.user.id;
 
     // Current admin (granted_by)
     const { data: { user } } = await supabase.auth.getUser();
@@ -178,9 +180,12 @@ const handleAddAdmin = async (e: React.FormEvent) => {
     }
 
     toast({
-      title: 'Permissions granted',
-      description: `Granted ${selectedPermissions.length} permission(s) to ${newAdminEmail}`,
+      title: 'Admin created successfully',
+      description: `Created admin account for ${newAdminEmail}. They will receive a password reset email.`,
     });
+
+    // Send password reset email
+    await supabase.auth.resetPasswordForEmail(newAdminEmail);
 
     setNewAdminEmail("");
     setNewAdminFullName("");
@@ -188,7 +193,7 @@ const handleAddAdmin = async (e: React.FormEvent) => {
     await fetchAdmins();
   } catch (error: any) {
     toast({
-      title: 'Error granting permissions',
+      title: 'Error creating admin',
       description: error.message,
       variant: 'destructive',
     });
@@ -238,7 +243,7 @@ const handleAddAdmin = async (e: React.FormEvent) => {
         <Card className="p-6">
           <h2 className="text-2xl font-serif font-bold mb-4">
             <UserPlus className="inline h-6 w-6 mr-2" />
-            Grant Admin Permissions to Existing User
+            Create New Admin Account
           </h2>
           <form onSubmit={handleAddAdmin} className="space-y-4">
             <div className="space-y-2">
@@ -248,7 +253,7 @@ const handleAddAdmin = async (e: React.FormEvent) => {
                 type="text"
                 value={newAdminFullName}
                 onChange={(e) => setNewAdminFullName(e.target.value)}
-                placeholder="John Doe (optional)"
+                placeholder="John Doe"
                 required
               />
             </div>
@@ -265,7 +270,9 @@ const handleAddAdmin = async (e: React.FormEvent) => {
               />
             </div>
 
-{/* Password removed - users must sign up first */}
+            <p className="text-sm text-muted-foreground">
+              A random password will be generated and a password reset email will be sent to the user.
+            </p>
 
             <div className="space-y-2">
               <Label>Permissions</Label>

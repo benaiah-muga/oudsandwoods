@@ -20,8 +20,6 @@ const adminMenuItems = [
   { title: "Reviews", url: "/admin/reviews", icon: Star },
   { title: "Campaigns", url: "/admin/campaigns", icon: Megaphone },
   { title: "Users", url: "/admin/users", icon: Users },
-  { title: "Delivery Staff", url: "/admin/delivery-staff", icon: Truck },
-  { title: "Manage Admins", url: "/admin/manage-admins", icon: ShieldCheck },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
 ];
 
@@ -30,14 +28,14 @@ export function AdminSidebar() {
 
 const getNavClass = ({ isActive }: { isActive: boolean }) =>
   isActive
-    ? "bg-muted/10 text-secondary font-semibold"
-    : "text-white/80 hover:text-secondary transition-colors";
+    ? "bg-secondary/20 text-secondary font-semibold"
+    : "text-white hover:text-secondary transition-colors";
 
   return (
     <Sidebar collapsible="icon" className="bg-[hsl(220,70%,8%)] border-r-0">
       <SidebarContent className="bg-[hsl(220,70%,8%)]">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-white/60">Admin Panel</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-secondary">Admin Panel</SidebarGroupLabel>
           
           <SidebarGroupContent>
             <SidebarMenu>
