@@ -39,7 +39,7 @@ const Shop = () => {
   const fetchProducts = async () => {
     setLoading(true);
     const searchQuery = searchParams.get("search");
-    let query = supabase.from("products").select("*");
+    let query = supabase.from("products").select("*").eq("availability", true);
 
     if (selectedCategory !== "all") {
       query = query.eq("category_id", selectedCategory);

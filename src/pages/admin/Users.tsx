@@ -4,8 +4,24 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { Plus, Edit, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface UserRow {
   id: string;
@@ -25,6 +41,9 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<RoleFilter>("all");
+  const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const [newRole, setNewRole] = useState<string>("");
 
   useEffect(() => {
     checkAccess();
@@ -119,6 +138,75 @@ export default function AdminUsers() {
     return idx === -1 ? 99 : idx;
   }
 
+  const handleAddRole = async () => {
+    if (!editingUser || !newRole) return;
+    
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .insert([{ user_id: editingUser.id, role: newRole as any }]);
+
+      if (error) throw error;
+      
+      toast({ title: "Role added successfully" });
+      setShowDialog(false);
+      setEditingUser(null);
+      setNewRole("");
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error adding role", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleRemoveRole = async (userId: string, role: string) => {
+    if (!confirm(`Remove ${role} role from this user?`)) return;
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .delete()
+        .match({ user_id: userId, role: role as any });
+
+      if (error) throw error;
+      
+      toast({ title: "Role removed successfully" });
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error removing role", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+
+    try {
+      // Check if super admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: user.id });
+      
+      if (!isSuperAdmin) {
+        toast({ 
+          title: "Permission denied", 
+          description: "Only super admins can delete users",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Delete user data
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (error) throw error;
+      
+      toast({ title: "User deleted successfully" });
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error deleting user", description: error.message, variant: "destructive" });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center"><p>Loading...</p></div>
@@ -142,15 +230,47 @@ export default function AdminUsers() {
 
         <div className="grid gap-4">
           {filtered.map((u) => (
-            <Card key={u.id} className="p-4 flex items-center justify-between">
-              <div>
-                <div className="font-semibold">{u.full_name || u.email}</div>
-                <div className="text-sm text-muted-foreground">{u.email}</div>
-              </div>
-              <div className="flex gap-2">
-                {u.roles.map((r) => (
-                  <Badge key={r} variant="secondary" className="uppercase">{r.replace('_', ' ')}</Badge>
-                ))}
+            <Card key={u.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">{u.full_name || u.email}</div>
+                  <div className="text-sm text-muted-foreground">{u.email}</div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <div className="flex gap-2">
+                    {u.roles.map((r) => (
+                      <div key={r} className="flex items-center gap-1">
+                        <Badge variant="secondary" className="uppercase">{r.replace('_', ' ')}</Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0"
+                          onClick={() => handleRemoveRole(u.id, r)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setEditingUser(u);
+                      setShowDialog(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Role
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteUser(u.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -158,6 +278,33 @@ export default function AdminUsers() {
             <p className="text-center text-muted-foreground py-8">No users match your filters.</p>
           )}
         </div>
+
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Role to {editingUser?.email}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Select Role</Label>
+                <Select value={newRole} onValueChange={setNewRole}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choose a role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="delivery_guy">Delivery Guy</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAddRole}>Add Role</Button>
+                <Button variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

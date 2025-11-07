@@ -19,7 +19,7 @@ interface Product {
   image_url: string;
   size: string;
   scent: string;
-  stock_quantity: number;
+  availability: boolean;
   category: { name: string };
 }
 
@@ -141,9 +141,9 @@ const ProductDetails = () => {
                 <Package className="h-5 w-5 text-muted-foreground" />
                 <span className="text-sm">Size: {product.size}</span>
               </div>
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 <Truck className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">Free shipping on orders over UGX 550,000</span>
+                <span className="text-sm">Free delivery on orders over UGX 550,000</span>
               </div>
             </div>
 
@@ -161,11 +161,8 @@ const ProductDetails = () => {
               )}
             </div>
 
-            {product.stock_quantity > 0 ? (
+            {product.availability ? (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {product.stock_quantity < 20 && `Only ${product.stock_quantity} left in stock!`}
-                </p>
                 <Button
                   size="lg"
                   className="w-full bg-secondary hover:bg-secondary/90 text-primary font-semibold"

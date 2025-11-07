@@ -9,45 +9,74 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Star } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const AdminReviews = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingReview, setEditingReview] = useState<any>(null);
   const [formData, setFormData] = useState({
     reviewer_name: "",
     comment: "",
     rating: 5,
+    product_id: "",
   });
 
   useEffect(() => {
     checkAdminAccess();
-    fetchReviews();
+    fetchProducts();
   }, []);
 
   const checkAdminAccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      navigate("/admin/auth");
-      return;
-    }
-
-    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', {
-      _user_id: user.id
-    });
-
-    if (!isSuperAdmin) {
-      const { data: hasPermission } = await supabase.rpc('has_permission', {
-        _user_id: user.id,
-        _permission: 'manage_products'
-      });
-
-      if (!hasPermission) {
-        navigate("/");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/admin/auth");
+        return;
       }
+
+      const [{ data: isSuper }, { data: isAdmin }] = await Promise.all([
+        supabase.rpc('is_super_admin', { _user_id: user.id }),
+        supabase.rpc('has_permission', { _user_id: user.id, _permission: 'manage_products' }),
+      ]);
+
+      if (!isSuper && !isAdmin) {
+        navigate("/");
+        return;
+      }
+
+      await fetchReviews();
+    } catch (error: any) {
+      toast({ title: "Access denied", description: error.message, variant: "destructive" });
+      navigate("/");
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name")
+        .order("name");
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error fetching products",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -62,7 +91,7 @@ const AdminReviews = () => {
       setReviews(data || []);
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Error fetching reviews",
         description: error.message,
         variant: "destructive",
       });
@@ -77,12 +106,21 @@ const AdminReviews = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      if (!formData.product_id) {
+        toast({
+          title: "Error",
+          description: "Please select a product",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const reviewData = {
         reviewer_name: formData.reviewer_name,
-        comment: formData.comment,
         rating: formData.rating,
+        comment: formData.comment,
+        product_id: formData.product_id,
         user_id: user.id,
-        product_id: null,
       };
 
       if (editingReview) {
@@ -101,7 +139,7 @@ const AdminReviews = () => {
 
       setShowForm(false);
       setEditingReview(null);
-      setFormData({ reviewer_name: "", comment: "", rating: 5 });
+      setFormData({ reviewer_name: "", rating: 5, comment: "", product_id: "" });
       fetchReviews();
     } catch (error: any) {
       toast({
@@ -133,8 +171,9 @@ const AdminReviews = () => {
     setEditingReview(review);
     setFormData({
       reviewer_name: review.reviewer_name || "",
-      comment: review.comment || "",
       rating: review.rating,
+      comment: review.comment || "",
+      product_id: review.product_id || "",
     });
     setShowForm(true);
   };
@@ -150,16 +189,13 @@ const AdminReviews = () => {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-serif font-bold mb-2">Manage Reviews</h1>
-            <p className="text-muted-foreground">{reviews.length} total reviews</p>
-          </div>
+        <div className="flex justify-between items-center">
+          <h1 className="text-4xl font-serif font-bold">Manage Reviews</h1>
           <Button
             onClick={() => {
               setShowForm(!showForm);
               setEditingReview(null);
-              setFormData({ reviewer_name: "", comment: "", rating: 5 });
+              setFormData({ reviewer_name: "", rating: 5, comment: "", product_id: "" });
             }}
             className="bg-secondary hover:bg-secondary/90 text-primary"
           >
@@ -175,6 +211,25 @@ const AdminReviews = () => {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
+                <Label>Product</Label>
+                <Select
+                  value={formData.product_id}
+                  onValueChange={(value) => setFormData({ ...formData, product_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label>Reviewer Name</Label>
                 <Input
                   value={formData.reviewer_name}
@@ -182,6 +237,7 @@ const AdminReviews = () => {
                   required
                 />
               </div>
+
               <div>
                 <Label>Rating (1-5)</Label>
                 <Input
@@ -193,20 +249,18 @@ const AdminReviews = () => {
                   required
                 />
               </div>
+
               <div>
                 <Label>Comment</Label>
                 <Textarea
                   value={formData.comment}
                   onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
                   rows={4}
-                  required
                 />
               </div>
+
               <div className="flex gap-2">
-                <Button 
-                  type="submit" 
-                  className="bg-secondary hover:bg-secondary/90 text-primary"
-                >
+                <Button type="submit" className="bg-secondary hover:bg-secondary/90 text-primary">
                   {editingReview ? "Update" : "Add"} Review
                 </Button>
                 <Button
@@ -230,33 +284,26 @@ const AdminReviews = () => {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-xl font-serif font-bold">{review.reviewer_name || "Anonymous"}</h3>
-                    <div className="flex gap-1">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                      ))}
-                    </div>
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < review.rating ? "fill-yellow-500 text-yellow-500" : "text-muted"
+                        }`}
+                      />
+                    ))}
                   </div>
-                  <p className="text-muted-foreground mb-2">{review.comment}</p>
-                  {review.products && (
-                    <p className="text-sm">
-                      <span className="font-semibold">Product:</span> {review.products.name}
-                    </p>
-                  )}
+                  <p className="font-semibold">{review.reviewer_name || "Anonymous"}</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Product: {review.products?.name || "Unknown"}
+                  </p>
+                  <p className="text-muted-foreground">{review.comment}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(review)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(review)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(review.id)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(review.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

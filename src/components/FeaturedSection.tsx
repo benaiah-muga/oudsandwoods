@@ -17,7 +17,8 @@ const FeaturedSection = () => {
         .select("*")
         .eq("is_featured", true)
         .eq("availability", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(4);
 
       if (error) throw error;
       setFeaturedProducts(data || []);
